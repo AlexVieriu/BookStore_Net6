@@ -1,0 +1,260 @@
+﻿41. Setup Index
+
+-- NaMenu.razor --
+-> add a nav link Author 
+
+Pages-> Authors-> AuthorPage.razor
+
+UI:
+-> create a table (Id, FirstName, LastName, Actions(View, Update, Delete))
+
+Code:
+-> create a List<AuthorReadDto>
+-> get the Authors from the API:
+	-> OnInitializedAsync()
+		-> httpClient.AuthorsAsync()
+
+
+Error: Unauthorized(401) when i call the Authors
+-> we resolve this error at the next lesson(this error come because we didn't 
+send the token, that need to pe put in teh header, with the rest of the request)
+
+42. Extend HTTP Client
+
+-- Services --
+
+-> the purpose of creating IClient, Client is so we can atach the token to the http header:
+ _client.HttpClient.DefaultRequestHeaders.Authorization 
+                = new AuthenticationHeaderValue(Token.tokenType, token);
+
+-> the httpClient is private in the class that Nswag generated
+public partial class Client : IClient
+{
+    private System.Net.Http.HttpClient _httpClient;
+    ....
+}
+
+-> create partials: IClient, Client (the interface and class need to be in the same namespace)
+public partial class Client : IClient
+{
+    public HttpClient HttpClient
+    {
+        get
+        {
+            return _httpClient;
+        }
+    }    
+}
+
+-> create a class so that we can use to handle the ApiExceptions
+public class Response<T>
+{
+    public string Message { get; set; }
+    public string ValidationErrors { get; set; }
+    public bool Success { get; set; }
+    public T Data { get; set; }   
+}
+
+-> create a generic http class: BaseHttpService  
+
+// implement exception for StatusCode: 200-299, 400, 404, 500
+protected Response<Guid> ConvertApiException<Guid>(ApiException exception)
+protected async Task GetBearertoken()
+
+
+-- program.cs --
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+
+
+-- AuthorService.cs, IAuthorService.cs --
+Task<Response<List<AuthorReadDto>>> GetAuthors();
+
+-> create (try catch) blocks
+-> GetBearertoken()
+-> get the list of authors
+-> put all in the Response class
+-> if it crashes : response = ConvertApiException<List<AuthorReadDto>>(ex);
+return response
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+Code:
+public async Task<Response<List<AuthorReadDto>>> GetAuthors()
+{
+    Response<List<AuthorReadDto>> response;
+
+    try
+    {
+        await GetBearertoken();
+        var data = await _client.AuthorsAsync();
+        response = new Response<List<AuthorReadDto>>
+        {
+            Data = data.ToList(),
+            Success = true
+        };
+    }
+    catch(ApiException ex)
+    {
+        response = ConvertApiException<List<AuthorReadDto>>(ex);
+    }
+
+    return response;
+}
+
+
+-- AuthorsPage.razor --
+@inject IAuthorService authorService
+
+
+43. Setup Create Author Comp
+
+-> use "submit" so the <EditForm> knows what button is referring to OnValidSubmit 
+
+@inject IAuthorService authorService
+@inject NavigationManager navManager
+
+UI:
+-> create 3 div     : FirstName, LastName, Bio
+-> create 2 buttons : submit, back to authors list
+
+
+Code:
+private async Task OnCreateAuthor()
+{
+    var response = await authorService.CreateAuthor(Author);
+    if (response.Success)
+        BackToList();
+}
+
+BackToList() : -> go back to the Authors page
+
+
+44. Setup Update Author Comp
+
+-- AuthorService.cs --
+
+-> add 2 methods:
+Task<Response<AuthorReadDto>> GetAuthor(int authorId);
+Task<Response<int>> UpdateAuthor(int id, AuthorUpdateDto author);
+
+-> MappingUI -> MapUIConfig.cs
+ CreateMap<AuthorReadDto,AuthorUpdateDto>().ReverseMap();
+
+-- program.cs --
+builder.Services.AddAutoMapper(typeof(MapUIConfig));
+
+-- AuthorUpdatePage.razor --
+
+UI:
+-> same as AuthorCreatePage.razor
+
+
+Code:
+
+private AuthorUpdateDto? Author;
+
+[Parameter]
+public int Id { get; set; }
+
+protected override async Task OnInitializedAsync()
+{
+    var response = await authorService.GetAuthor(Id);
+    var authorUpdate = map.Map<AuthorUpdateDto>(response.Data);
+
+    if (response.Success)
+        Author = authorUpdate;
+}
+
+private async Task OnUpdateAuthor()
+{
+    response = await authorService.UpdateAuthor(Id, Author);
+    if (response.Success)
+        BackToList();
+}
+
+BackToList() : -> go back to the Authors page
+
+
+45. Setup View Author Comp
+
+UI:
+<div class="card col-6 p-4 mt-4">
+    <EditForm Model="Author">
+        <fieldset disabled="true">               
+            .....
+                (same as the CreatePage.razor)
+            ..... 
+        </fieldset>
+    </EditForm>      
+</div>
+
+-> add books
+-> add 2 buttons
+
+Code:
+-> OnInitializedAsync()
+    -> GetAuthor(Id);
+
+
+-> add the image property to the Book class
+-> add books to the UI:
+https://getbootstrap.com/docs/5.0/components/card/
+
+<div class="card" style="width: 18rem;">
+    <img src="@book.Image" class="card-img-top" alt="@book.Title">
+    <div class="card-body">
+        <h5 class="card-title">@book.Title - @book.Price.ToString("C")</h5>
+        <p class="card-text"></p>
+        <a href="#" class="btn btn-primary">View book</a>
+    </div>
+</div>
+
+
+46. Delete Author with JS Interop
+
+-> add delete method to the AuthorService
+
+-- IAuthorService.cs --
+Task<Response<int>> DeleteAuthor(int idAuthor)
+
+-> try, catch block 
+-> add token to the httpHeader  : await GetBearerToken();
+-> delete the Atuhor            : await _client.AuthorDELETEAsync(idAuthor);
+-> return response              : response = new() { Success = true };
+
+-- AuthorPage.razor --
+
+@inject IJSRuntime js
+
+private async Task OnDeleteAuthor(int id)
+{
+    var author = Authors.First(q => q.Id == id);
+    var confirm = await js.InvokeAsync<bool>("confirm",
+        $"Are you sure you want to delete {author.FirstName} {author.LastName}");
+    if (confirm)
+    {
+        response.Success = (await authorService.DeleteAuthor(id)).Success;
+        if (response.Success)
+            await OnInitializedAsync();
+    }
+}
+
+47. Add Authorization Restrictions
+
+-- AuthorsPage.cs --
+-> put the update and create button in a  <AuthorizeView Roles="Administrator"> component
+-> add to AuthorUpdatePage.razor and AuthorCreatePage.razor :     
+    @attribute [Authorize(Roles = UserRoles.Administrator)]
+
+-- App.razor --
+
+<NotAuthorized>
+    @if (context.User?.Identity?.IsAuthenticated == false)
+    {
+        <LoginUI />
+    }
+    else
+    {
+        <div class="alert alert-warning">You are not authorized</div>
+    }
+</NotAuthorized>

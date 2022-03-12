@@ -1,0 +1,198 @@
+﻿25. Add Identity Core Libraries and Tables to API
+Microsoft.AspNetCore.Identity.EntityFrameworkCore
+
+--- program.cs ---
+builder.Services.AddIdentityCore<IdentityUser>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<BooksStoreDbContext>();
+
+--- BookStoreDbContext.cs ---
+
+-> change DbContext -> IdentityDbContext
+public partial class BooksStoreDbContext : IdentityDbContext
+
+-> add : base.OnModelCreating(modelBuilder);
+.OnModelCreating(modelBuilder) : configure the schema needed for the identity framework
+
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        ...
+    }
+
+-> generate a migration that will add the Identity tables to the DataBase
+remove author and book from the migration file : 20220114140225_AddedIdentityTables
+
+CTRL + Q -> Package Manager Console 
+Add-migration AddedIndetityTables (create the code for mapping the data from the project to the database)
+Update-Database (execute the code created)
+
+-> if we want to add a new field, class... EF will add a new migration but will not repete the same code from 
+the old migration
+
+
+26. Add Custom Fields to User Table
+Data-> ApiUser.cs(FirstName, LastName)
+-> inherite from the IdentityUser
+
+--- BooksStoreDbContext.cs ---
+-> dbcontext is based on the ApiUser.cs now
+
+public partial class BooksStoreDbContext : IdentityDbContext<ApiUser>
+{
+    .....
+}
+
+--- program.cs ---
+-> configure services to use ApiUser
+
+builder.Services.AddIdentityCore<ApiUser>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<BooksStoreDbContext>();
+
+CTRL + Q -> Package Manager Console 
+add-migration ExtendedUserTable
+
+
+27. Seed Test Users and Roles
+-> when we create a Database make sure that we have roles and users when we start the app
+
+--- BooksStoreDbContext.cs ---
+
+-> creating Seeds:
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    // -- add roles --
+    modelBuilder.Entity<IdentityRole>().HasData(
+        new IdentityRole
+        {....},
+        new IdentityRole
+        {....}
+    );
+
+    // -- add users --
+    var hasher = new PasswordHasher<ApiUser>();
+
+    modelBuilder.Entity<ApiUser>().HasData(
+        new ApiUser
+        {....},
+        new ApiUser
+        {....},
+    ); 
+
+    // -- add roles to users --
+    modelBuilder.Entity<IdentityUserRole<string>>().HasData(
+        new IdentityUserRole<string>
+        {....},
+        new IdentityUserRole<string>
+        {....},
+    );
+} 
+
+CTRL + Q -> Package Manager Console 
+Add-Migration SeededDefaultUserAndRole (check the migration code before we update the DataBase)
+update-database
+
+
+28. Setup Authentification Controller 
+-> create a Empty Api Controller
+
+-- AuthController.cs --
+-> create registor method(POST)
+-> add mapping
+
+
+29. Setup JWT Auth - PART 1
+https://jwt.io/
+
+Issuer  : where the token is genereted from
+Audience: where the token is consumed
+Duration:  1 (1 min)
+
+-- appsettings.json --
+
+"JwtSettings": {
+    "Issuer": "BookStoreAPI",
+    "Audience": "BookStoreApiClient",
+    "Duration": 1,
+}
+
+-> right click on the project -> Manage user Secrets
+-- secrets.json --
+"JwtSettings": {
+    "Key": "7ea5d4d1-0f1e-4be2-8771-45e1c3dd7125"
+}  
+
+-- program.cs -- 
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        ValidateIssuer = true,
+        ValidateAudience= true,
+        ValidateLifetime = true,
+        
+        ClockSkew = TimeSpan.Zero,
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidAudience = builder.Configuration["JwtSettings:Issuer"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
+    };
+});
+
+
+app.UseAuthentication();
+
+
+Dictionary:
+authenticationschemes: https://stackoverflow.com/questions/46223407/asp-net-core-2-authenticationschemes
+
+DefaultAuthenticateScheme: if specified, AuthenticateAsync() will use this scheme, and also the AuthenticationMiddleware 
+                           added by UseAuthentication() will use this scheme to set context.User automatically. 
+                           (Corresponds to AutomaticAuthentication)
+
+DefaultChallengeScheme   : if specified, ChallengeAsync() will use this scheme, [Authorize] with policies that don't 
+                           specify schemes will also use this
+
+
+30. Setup JWT Auth - PART 2
+
+-- AuthController.cs --
+public async Task<ActionResult<AuthResponse>> Login(LoginUserDto loginUserDto)
+{
+    ...
+    string tokenString = await GenerateJWT(user);
+    var response = new AuthResponse
+    {
+        UserId = user.Id,
+        Email = user.Email,
+        Token = tokenString
+    };
+
+    return Ok(response);
+}
+
+private async Task<string> GenerateJWT(ApiUser user){
+    securityKey
+    credentials
+
+    roles
+    rolesClaims
+    userClaims
+
+    claims
+
+    token
+
+    return new JwtSecurityTokenHandler().WriteToken(token); 
+}
+
+
+31. Setup Controller and Action Authorizations

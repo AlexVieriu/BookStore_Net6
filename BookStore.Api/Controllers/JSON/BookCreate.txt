@@ -1,0 +1,7 @@
+﻿{
+  "title": "Idila pe un turn",
+  "year": 1989,
+  "isbn": "21321sdsadwqeqw",
+  "summary": "o mare branza",
+  "price": 15
+}

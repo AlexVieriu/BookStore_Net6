@@ -1,0 +1,82 @@
+﻿7. Create .NET 6 Web API Project
+-> Blank Solution project
+-> Add a Api project(BookStoreApp.API): 
+	-> framework			: .net 6
+	-> Authentification type: None
+	-> Configuration for HTTP(checked)
+	-> Enable Docker(unchecked)
+	-> Use controllers(checked)
+	-> Enable OpenAPI support(checked) - Swagger Support 
+
+
+9. Configure Loggin using Serilog
+
+Nuget Packages: 
+<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1"/>
+<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.1" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.1"/>
+<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.1" />
+<PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
+<PackageReference Include="Serilog.Expressions" Version="3.2.1" />
+<PackageReference Include="Serilog.Sinks.Seq" Version="5.1.0" />
+<PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+
+Serilog.Expressions : put the configuration in appsettingsfile.json and read it from the program.cs
+
+-> remove "Loggin" from appsettings.json, appsettings.Development.json
+
+-- appsettings.json --
+"Serilog": {
+    "MinimumLevel": "Information",
+    "Override": {
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    },
+    "WriteTo": [
+      {
+        "Name": "File",
+        "Args": {
+          "path": "./Logs/log-.txt",
+          "rollingInterval": "Day"
+        }
+      },
+      {
+        "Name": "Seq",
+        "Args": {"serverUrl": "http://localhost:5341"}
+      }
+    ]
+  }
+
+-- Program.cs --
+builder.Host.UseSerilog((ctx, lc) =>
+    lc.WriteTo.Console().ReadFrom.Configuration(ctx.Configuration));
+
+ctx -> the configuration context that we are in
+lc  -> LoggingConfiguration
+
+More about logging:
+https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0
+
+
+10.CORS Configuration
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", b => b.AllowAnyMethod()
+                                        .AllowAnyHeader()
+                                        .AllowAnyOrigin());
+});
+
+
+--- .AllowAnyOrigin() ---
+
+b.WithOrigins("http://example.com", "http://www.contoso.com");
+
+
+--- .AllowAnyHeader() ---
+
+
+--- .AllowAnyMethod() ---
+
+b.WithMethods("PUT", "DELETE", "GET");

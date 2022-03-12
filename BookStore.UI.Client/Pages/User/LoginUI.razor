@@ -1,0 +1,51 @@
+﻿@page "/login"
+
+@inject IAuthenticationService auth
+@inject NavigationManager navManager
+
+
+<h4>Login User</h4>
+
+
+@if (!string.IsNullOrWhiteSpace(message))
+{
+    <p class="alert alert-danger">@message</p>
+}
+
+@if (LoginModel != null)
+{
+    <div class="card p-4 mt-5 col-6">
+        <EditForm Model="LoginModel" OnValidSubmit="OnLoginUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div>
+                <label class="fw-bold">UserName</label>
+                <InputText class="form-control mb-4" @bind-Value="LoginModel.UserName" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Password</label>
+                <InputText class="form-control mb-4" @bind-Value="LoginModel.Password" type="password"/>
+            </div>
+
+            <button class="btn btn-primary col-3" type="submit">Login User</button>
+        </EditForm>
+    </div>
+}
+
+
+@code {
+    LoginUser LoginModel = new();
+    string message = "";
+
+    private async Task OnLoginUser()
+    {
+        message = "";
+        var response = await auth.Login(LoginModel);
+        if (response == "Logged In")
+            navManager.NavigateTo("/");
+        else
+            message = response;
+    }
+}

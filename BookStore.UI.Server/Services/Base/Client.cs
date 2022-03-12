@@ -1,0 +1,12 @@
+﻿namespace BookStore.UI.Server.Services.Base;
+
+public partial class Client : IClient
+{
+    public HttpClient HttpClient
+    {
+        get
+        {
+            return _httpClient;
+        }
+    }
+}

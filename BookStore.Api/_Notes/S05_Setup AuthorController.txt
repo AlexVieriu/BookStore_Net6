@@ -1,0 +1,70 @@
+﻿16. Setup API Controller
+(right click)Controllers -> Add -> Controller -> API -> API Controller With Actions, using Entity Framework
+
+public async Task<ActionResult<List<AuthorReadDto>>> GetAuthors()
+-> use specific return type so Swagger can add the model to the result
+
+return CreatedAtAction("GetAuthor", new { id = author.Id }, author);
+-> go to the method "GetAuthor", and return the author with the Id created
+
+_context.Authors.ToListAsync();
+_context.Authors.FindAsync(id);
+_context.Authors.Add(author);
+_context.Authors.Remove(author);
+_context.Authors.AnyAsync(e => e.Id == id);
+_context.SaveChangesAsync();
+
+
+17. Setup AutoMapper and DTOs
+AuthorCreateDto.cs
+AuthorReadDto.cs
+AuthorUpdateDto.cs
+
+BookCreateDto.cs
+BookReadDto.cs
+BookUpdateDto.cs
+
+BaseDto.cs
+
+-> refactor the APIs so we return a generic ActionRezult(ex: ActionResult<AuthorCreateDto> )
+-> refactoring will help to see better the respons
+
+-> create the mapper class
+class MapperConfig : Profile
+{
+	CreateMap<Author, AuthorCreateDto>().ReverseMap();
+	...... 
+}
+
+.ReverseMap() : transfer data from Author -> AuthorCreateDto and AuthorCreateDto -> Author
+
+-> the mapping role is to automatically transfer the properties values from a class to another
+-> if one class doesn't have the fields that the other one have, it will fill with NULL values 
+
+--- program.cs ---
+-> add AutoMapper Service
+	builder.Services.AddAutoMapper(typeof(MapperConfig));
+
+
+18. Add Logging with Serilog and Seq
+
+Access the logging:
+private readonly ILogger<AuthorsController> _logger;
+
+-> create a static class where we define the error message;
+public static string Status500ErrorMsg(Exception ex)
+{
+    return $"{ex.Message}  - {ex.InnerException}";
+}
+
+-> put all code inside try catch blocks
+-> implement logger to catch block
+	
+catch (Exception ex)
+{
+    _logger.LogError(ex, $"Error GET at {nameof(GetAuthors)} - {Message.Status500ErrorMsg(ex)}");
+    return StatusCode(500, Message.Status500ErrorMsg(ex));
+}
+
+-> use logging where we need it(the logging affects performance)
+

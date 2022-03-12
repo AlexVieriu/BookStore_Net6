@@ -1,0 +1,112 @@
+﻿34. Create/Understand Blazor Project Structure
+WASM project -> allows you to run a full app only inside the browser, all of the dependencies, 
+				all of the libraries can run inside the browser
+
+PWA -> ??
+
+css isolation		(nested in the .razor page) - .net 5
+javascrit isolation	(nested in the .razor page)	- .net 6
+
+App.razor: initialized some default components that are needed to launch the app
+
+
+35. Setup HTTP Client Using Nswag Studio
+
+NSwag:https://github.com/RicoSuter/NSwag
+-> will generate the code needed for the interaction with the API
+
+a. Download the program
+b. Generate the .cs file
+c. Copy the .json swagger api to the Nswag : https://localhost:7223/swagger/v1/swagger.json
+d. Save the NSwag configuration
+
+-- program.cs --
+
+-> allow us to interact with an API
+builder.Services.AddHttpClient<IClient, Client>(http => http.BaseAddress = new Uri("https://localhost:7223"));
+
+ex: you can have multiple API been consumed by a single UI app
+-> you can initialize an http client per API
+
+
+36. Setup User Registration
+Pages->Users-> UserRegister.razor
+
+Html:
+-> create a <EditForm> with <div> that contains the Register properties
+
+Code:
+try
+{
+    message = "";
+    await httpClient.RegisterAsync(RegisterUser);
+    navManager.NavigateTo("\");
+}
+catch (ApiException ex)
+{
+    message = ex.Response;
+}
+
+
+-- ServiceClient.cs --
+JSON  Annotation: [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Always)]
+Model Annotation: [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)] 
+
+
+37_38. Setup User Login 
+
+-- Authentication - 
+
+Providers -> ApiAuthentificationStateProvider.cs
+
+public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+public async Task LoggedIn()
+public async Task LoggedOut()
+private async Task<List<Claim>> GetClaims()
+
+
+Services -> Authentication -> AuthenticationService.cs
+                           -> IAuthenticationService.cs
+
+Task<bool> Login(LoginUserDto loginUser);
+public Task Logout();
+
+-- App.razor --
+
+<CascadingAuthenticationState>
+    ..... The existing code ....
+<CascadingAuthenticationState/>
+
+-> change RouteView -> AuthorizeRouteView
+-> if <NotAuthorized> go to LoginPage component
+
+
+-- program.cs --
+
+builder.Services.AddHttpClient<IClient, Client>(http => http.BaseAddress = new Uri("https://localhost:7223"));
+
+builder.Services.AddScoped<ApiAuthentificationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(p =>
+        p.GetRequiredService<ApiAuthentificationStateProvider>());
+
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+
+
+-- LoginPage.razor --
+
+-> create <EditForm> blazor elem with 2 div : UserName, Password
+
+
+-- Shared -> NavMenu.razor --
+
+<AuthorizeView>
+    <Authorized>           
+        @context.User?.Identity?.Name           
+        Logout
+    </Authorized>
+
+    <NotAuthorized>
+        Register          
+        Login
+    </NotAuthorized>
+</AuthorizeView>

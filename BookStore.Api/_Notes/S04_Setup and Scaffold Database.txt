@@ -1,0 +1,91 @@
+﻿12. Create Database in SQL Server
+
+a. Database First
+-> you have a Database and you create the clases base on the tables
+-> a lot of the time you build an API, you already have a Database
+
+Connect to a dateBase:
+View-> Server Explorer
+Data Connections -> Add Connection -> MicrosoftSQLServer -> Server Name		: apptestsrv 
+															Authentification: Windows Authentification
+															Database		: AlexTestare
+Create a Databe:
+View-> Server Explorer
+Create new Sql Server Database-> Server name		: apptestsrv
+								 Authentification	: Use Windows Authentification
+								 Database			: DatabaseTest
+
+
+b. Code First
+-> you have the classes, u create the tables, and u modify the tables based on the classes change
+
+Create Tables:
+
+CREATE TABLE [dbo].[Books] (
+    [Id]       INT             IDENTITY (1, 1) NOT NULL,
+    [Title]    NVARCHAR (50)   NULL,
+    [Year]     INT             NULL,
+    [ISBN]     NVARCHAR (50)   NOT NULL UNIQUE,
+    [Summary]  NVARCHAR (250)  NULL,
+    [Image]    NVARCHAR (50)   NULL,
+    [Price]    DECIMAL (18, 2) NULL,
+    [AuthorId] INT             NOT NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_Books_ToAuthors] FOREIGN KEY ([AuthorId]) REFERENCES [dbo].[Authors] ([Id])
+);
+
+
+13. Scaffold Database
+
+<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.1" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.1">
+
+--- appsettings.json ---
+"ConnectionStrings": {
+    "BookStoreApp": "Server = ALEXVIERIU\\VIERIUALEXANDRU; Database = BookStore_DotNet6; Trusted_Connection = True; MultipleActiveResultSets = true;"
+  },
+
+MultipleActiveResultSets : multiple connections to the database
+
+--- Program.cs ---
+
+a. Configure the Dabatase Service
+
+var conString = builder.Configuration.GetConnectionString("BookStoreApp");
+builder.Services.AddDbContext<BooksStoreDbContext>(options => options.UseSqlServer(conString));
+
+builder.Services.AddIdentityCore<IdentityUser>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<BooksStoreDbContext>();
+
+b. DataBase First Aproach
+
+--  generate DbContext, make clases based on the actual database --
+
+CTRL+Q -> Package Manager Console -> cls/clear(to clear the msg from the console)
+
+Scaffold-DbContext 'Server = ALEXVIERIU\VIERIUALEXANDRU; Database = BookStore_DotNet6; Trusted_Connection = True; MultipleActiveResultSets = true;' Microsoft.EntityFrameworkCore.SqlServer -ContextDir Data -OutputDir Data
+
+
+-- generate tables base on classes --
+
+-> clean the BooksStoreDbContext.cs 
+    -> remove OnConfiguration(DbContexetOptionsBuilder optionsBuilders) 
+
+
+c. Code First Aproach
+-> create class CodeFirstTable.cs
+
+-- BooksStoreDbContext --
+public virtual DbSet<CodeFirstTable> CodeFirstTables { get; set; } = null!;
+
+CTRL+Q -> Package Manager Console:
+
+add-migration AddedCodeFirstTable 
+Remove-Migration 
+
+
+-> will create a migration creating all of the clases that are in the projrect
+-> delete Author and Book from the migrations because they already are in the DataBase(we create when we used Database First Aproach)
+
+update-database

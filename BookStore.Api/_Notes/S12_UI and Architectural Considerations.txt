@@ -1,0 +1,34 @@
+﻿61. Implement Repository Pattern
+
+Repositories -> Contracts	-> IBaseRepository.cs	
+							-> IAuthorRepository.cs
+							-> IBookRepository.cs
+			 
+			 -> Services	-> BaseRepository.cs
+							-> AuthorRepository.cs
+							-> BookRepository.cs
+
+IBaseRepository.cs: 
+	Task<T> AddAsync(T entity);
+	Task DeleteAsync(int id);
+	Task<T> GetAsync(int? id);
+	Task<List<T>> GetAllAsync();
+	Task UpdateAsync(T entity);
+
+IBookRepository : IBaseRepository<Book> 
+	Task<List<BookReadDto>> GetAllBooksAsync();
+	Task<BookReadDto> GetBookAsync(int id);
+
+IAuthorRepository : IBaseRepository<Author>
+	Task<AuthorReadDto> GetAuthorAsync(int id);
+
+
+62. Virtualization
+
+-> Model -> QueryParameters.cs		(StartIndex, PageSize)
+		 -> VirtualizeResponse.cs	(Items, TotalSize) 
+
+-- IBaseRepository.cs --
+Task<VirtualizeResponse<TResult>> GetAllAsync<TResult>(QueryParameters queryParam) where TResult : class;
+
+

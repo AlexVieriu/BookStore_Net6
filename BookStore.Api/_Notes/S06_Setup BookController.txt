@@ -1,0 +1,18 @@
+﻿Same as AuthorController
+
+How to do inner joins with EF and map automatically
+
+--- MapperConfig.cs ---
+CreateMap<Book, BookReadDto>()
+    .ForMember(q => q.AuthorName, d => d.MapFrom(map => $"{map.Author.FirstName} {map.Author.LastName}"))
+    .ReverseMap();
+
+
+--- BooksController.cs --
+var books = await _context.Books.Include(q => q.Author)
+                                               .ProjectTo<BookReadDto>(_mapper.ConfigurationProvider)
+                                               .ToListAsync();
+
+var book = await _context.Books.Include(q => q.Author)
+                               .ProjectTo<BookReadDto>(_mapper.ConfigurationProvider)
+                               .FirstOrDefaultAsync(q => q.Id == id);

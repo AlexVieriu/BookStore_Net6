@@ -1,0 +1,147 @@
+﻿@page "/book/create"
+
+@inject IBookService bookService
+@inject IAuthorService authorService
+@inject NavigationManager navManager
+
+@attribute [Authorize(Roles = UserRoles.Administrator)]
+
+<h3>Create Book</h3>
+<br>
+
+@if (!response.Success)
+{
+    <div class="alert alert-danger">@response.Message</div>
+}
+
+@if (Book != null && Authors != null)
+{
+    <div class="card p-4 col col-xl-6">
+        <EditForm Model="Book" OnValidSubmit="OnCreatingBook">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div>
+                <label class="fw-bold">Title</label>
+                <InputText class="form-control mb-3" @bind-Value="Book.Title" />
+            </div>
+
+            <div>
+                <label class="fw-bold">ISBN</label>
+                <InputText class="form-control mb-3" @bind-Value="Book.Isbn" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Price</label>
+                <InputNumber class="form-control mb-3" @bind-Value="Book.Price" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Year</label>
+                <InputNumber class="form-control mb-3" @bind-Value="Book.Year" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Summary</label>
+                <InputTextArea class="form-control mb-3" @bind-Value="Book.Summary" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Author</label>
+                <InputSelect @bind-Value="Book.AuthorId" class="form-select">
+                    <option value="">--- Select Author ---</option>
+                    @foreach (var author in Authors)
+                    {
+                    <option value="@author.Id">@author.FirstName @author.LastName</option>
+                    }
+            </InputSelect>
+        </div>
+
+        <br>
+        <div>
+            <label class="fw-bold">Book Cover Photo</label>
+            <div>
+                <InputFile OnChange="OnSelectFile" />
+                <img src="@img" width="200" height="200" class="img-thumbnail">
+                <p class="text-danger">@UploadFileWarning</p>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="d-flex justify-content-around">
+            <button class="btn btn-primary col-5" type="submit">
+                <span class="oi oi-plus me-2"></span> Create Book
+            </button>
+
+            <a href="/books" class="btn btn-secondary col-5">
+                <span class="oi oi-media-skip-backward"></span> Back To List
+            </a>
+        </div>
+
+    </EditForm>
+</div>
+}
+
+
+@code {
+    BookCreateDto Book = new()
+        {
+            Title = "Idila pe un turn",
+            Price = 12,
+            Isbn = "321nbe981321hb",
+            Year = 1950,
+            Summary = "This is my summary"
+        };
+
+    Response<int> response = new() { Success = true };
+    private List<AuthorReadDto> Authors = new();
+    private string UploadFileWarning = "";
+    private string img = string.Empty;
+    long maxFileSize = 1024 * 1024 * 5;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await authorService.GetAuthors();
+        if (response.Success)
+            Authors = response.Data;
+    }
+
+    private async Task OnCreatingBook()
+    {
+        response = await bookService.CreateBook(Book);
+        if (response.Success)
+            navManager.NavigateTo("/books");
+    }
+
+    private async Task OnSelectFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            if (file.Size > maxFileSize)
+            {
+                UploadFileWarning = "Please select a img less then 5Mb";
+                return;
+            }
+
+            var ext = Path.GetExtension(file.Name);
+            if (ext.ToLower().Contains("jpg") || ext.ToLower().Contains("png") || ext.ToLower().Contains("jpeg"))
+            {
+                var byteArray = new byte[file.Size];
+                await file.OpenReadStream().ReadAsync(byteArray);
+                string imageType = file.ContentType;
+                string base64String = Convert.ToBase64String(byteArray);
+
+                Book.ImageData = base64String;
+                Book.OriginalImageName = file.Name;
+                img = $"data:{imageType}; base64, {base64String}";
+            }
+            else
+            {
+                UploadFileWarning = "Please select a valid image file (*.jpg || *.png)";
+                return;
+            }
+        }
+    }
+}

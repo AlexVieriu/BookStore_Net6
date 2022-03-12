@@ -1,0 +1,267 @@
+﻿NugetPackages:
+
+<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.1" />
+<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.1" />
+<PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
+<PackageReference Include="Serilog.Expressions" Version="3.2.1" />
+<PackageReference Include="Serilog.Sinks.Seq" Version="5.1.1" />
+<PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.1" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.1" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1" />
+
+
+1. Serilog:
+
+--- appsettings.json ---
+
+"Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "Microsoft.Hosting.Lifetime": "Information"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "File",
+        "Args": {
+          "path": "./logs/log-.txt",
+          "rollingInterval": "Day"
+        }
+      },
+      {
+        "Name": "Seq",
+        "Args": { "serverUrl": "http://localhost:5341" }
+      }
+    ]
+  },
+
+-- program.cs --
+
+builder.Host.UseSerilog((serilogLogging, loggerPrividerCollection) =>
+        loggerPrividerCollection.WriteTo.Console().ReadFrom.Configuration(serilogLogging.Configuration));
+
+
+2. CORS:
+
+builder.Services.AddCors(o =>
+{
+    o.AddPolicy("AllowAll", b => b.AllowAnyHeader()
+                                  .AllowAnyOrigin()
+                                  .AllowAnyMethod());
+});
+
+app.UseCors("AllowAll");
+
+
+3. Models
+
+BaseDto.cs
+QueryParameterscs.
+VirtualizeResponse.cs
+
+Author  -> AuthorCreateDto.cs
+        -> AuthorDetailsDto.cs
+        -> AuthorReadOnlyDto.cs
+        -> AuthorUpdateDto.cs
+
+Book    -> BookCreateDto.cs
+        -> BookDetailsDto.cs
+        -> BookReadOnlyDto.cs
+        -> BookUpdateDto.cs
+
+4. DataBase
+
+--- appsettings.json ---
+"BookStore": "Server=ALEXVIERIU\\VIERIUALEXANDRU;Database=BookStore_Net6;Trusted_Connection=True;MultipleActiveResultSets=true;"
+     
+-- program.cs --
+
+var conString = builder.Configuration.GetConnectionString("BookStore");
+builder.Services.AddDbContext<BookStoreDbContext>(options => options.UseSqlServer(conString));
+
+builder.Services.AddIdentityCore<ApiUser>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<BookStoreDbContext>();
+
+Creating Tables:
+
+CREATE TABLE [dbo].[Authors] (
+    [Id]        INT           IDENTITY (1, 1) NOT NULL,
+    [FirstName] VARCHAR (25)  NULL,
+    [LastName]  VARCHAR (25)  NULL,
+    [Bio]       VARCHAR (200) NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC)
+);
+
+CREATE TABLE [dbo].[Books] (
+    [Id]       INT             IDENTITY (1, 1) NOT NULL,
+    [Title]    VARCHAR (50)    NULL,
+    [Year]     INT             NULL,
+    [ISBN]     VARCHAR (50)    NOT NULL,
+    [Summary]  VARCHAR (200)   NULL,
+    [Image]    VARCHAR (50)    NULL,
+    [Price]    DECIMAL (18, 2) NULL,
+    [AuthorId] INT             NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC),
+    UNIQUE NONCLUSTERED ([ISBN] ASC),
+    CONSTRAINT [FK_Books_ToAuthors] FOREIGN KEY ([AuthorId]) REFERENCES [dbo].[Authors] ([Id])
+);
+
+
+-- DataBase First --
+PM> Scaffold-DbContext "Server=ALEXVIERIU\VIERIUALEXANDRU;Database=BookStore_Net6;Trusted_Connection=True;MultipleActiveResultSets=true;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Data
+
+-> extend the AspNetUsers Table
+    -> create ApiUser.cs(FirstName, LastName)
+
+-- BookStoreDbContext.cs --
+
+-> change DbContext -> IdentityDbContext<ApiUser>
+
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        ...
+    }
+
+
+-- CodeBase First --
+PM> add-migration AddColFirstNameLastNameToTableAspNetUsers
+PM> update-database 
+
+6. Repositories
+
+public interface IBaseRepository<T> where T : class
+{
+    Task<T> AddAsync(T entity);
+    Task DeleteAsync(int id);
+    Task<bool> Exists(int id);
+    Task<List<T>> GetAllAsync();
+    Task<VirtualizeResponse<TResult>> GetAllAsync<TResult>(QueryParameters queryParam) where TResult : class;
+    Task<T> GetAsync(int? id);
+    Task UpdateAsync(T entity);
+}
+
+public interface IAuthorsRepository : IBaseRepository<Author>
+{
+    Task<AuthorDetailsDto> GetAuthorDetailsAsync(int id);
+}
+
+BaseRepository.cs
+AuthorRepository.cs
+
+
+7. Mapping
+
+Mapping-> MapperConfig.cs
+
+-- program.cs --
+builder.Services.AddAutoMapper(typeof(MapperConfig));
+
+
+8. AuthorsController
+
+-- AuthorsController.cs --
+
+[HttpGet]
+public async Task<ActionResult<VirtualizeResponse<AuthorReadOnlyDto>>> GetAuthors([FromQuery] QueryParameters qparams)
+
+[HttpGet("GetAll")]
+public async Task<ActionResult<List<AuthorReadOnlyDto>>> GetAuthors()
+
+[HttpGet("{id}")]
+public async Task<ActionResult<AuthorDetailsDto>> GetAuthor(int id)
+
+[Authorize(Roles = "Administrator")]
+public async Task<IActionResult> PutAuthor(int id, AuthorUpdateDto authorDto)
+
+[HttpPost]
+[Authorize(Roles = "Administrator")]
+public async Task<ActionResult<AuthorCreateDto>> PostAuthor(AuthorCreateDto authorDto)
+
+[HttpDelete("{id}")]
+[Authorize(Roles = "Administrator")]
+public async Task<IActionResult> DeleteAuthor(int id)
+
+[HttpDelete("{id}")]
+[Authorize(Roles = "Administrator")]
+public async Task<IActionResult> DeleteAuthor(int id)
+
+9. BookController
+
+-- BookController.cs -- 
+
+[HttpGet]
+public async Task<ActionResult<VirtualizeResponse<BookReadOnlyDto>>> GetBooks([FromQuery] QueryParameters qparams)
+
+[HttpGet]
+public async Task<ActionResult<IEnumerable<BookReadOnlyDto>>> GetBooks()
+
+[HttpGet("{id}")]
+public async Task<ActionResult<BookDetailsDto>> GetBook(int id)
+
+[HttpPut("{id}")]
+//[Authorize(Roles = "Admin")]
+public async Task<IActionResult> UpdateBook(int id, BookUpdateDto bookDto)
+
+[HttpPost]
+[Authorize(Roles = "Admin")]
+public async Task<ActionResult<BookCreateDto>> CreateBook(BookCreateDto bookCreateDto)
+
+[HttpDelete("{id}")]
+[Authorize(Roles ="Admin")]
+public async Task<IActionResult> DeleteAuthor(int id)
+
+10. AuthController
+
+
+-- AuthController.cs --
+
+public async Task<IActionResult> Register(RegisterUserDto registerUser)
+public async Task<IActionResult> Login(LoginUserDto loginUser)
+private async Task<string> GenerateToken(ApiUser user)
+
+Data    -> ApiUser.cs (FirstName, LastName)
+Mapping -> MapperConfig.cs :  CreateMap<ApiUser, RegisterUserDto>().ReverseMap();
+Models  -> User -> AuthResponse.cs
+                -> LoginUserDto.cs
+                -> RegisterUserDto.cs
+
+-- appsettings.json --
+"Jwt": {
+    "Key": "e7fa77c8-111c-4645-8796-36c8e7e144e9",
+    "Issuer": "BookStoreApi",
+    "Audience": "BookStoreApiClient"    
+  },
+
+
+-- Program.cs --
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero,
+
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+
+
+app.UseAuthentication();

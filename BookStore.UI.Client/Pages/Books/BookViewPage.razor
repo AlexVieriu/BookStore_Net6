@@ -1,0 +1,78 @@
+﻿@page "/book/view/{id:int}"
+
+@inject IBookService bookService
+@inject NavigationManager navManager
+
+<h4>Book View</h4>
+<br />
+
+@if (Book != null)
+{
+    <div class="card p-4 col col-xl-6">
+        <EditForm Model="Book">
+            <fieldset disabled="true">
+
+                <div>
+                    <label></label>
+                    <div>
+                        <img src="@Book.Image" with="100" height="100" class="img-thumbnail">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="fw-bold">Title</label>
+                    <InputText class="form-control mb-3" @bind-Value="Book.Title" />
+                </div>
+
+                <div>
+                    <label class="fw-bold">Author</label>
+                    <InputText class="form-control mb-3" @bind-Value="Book.AuthorName" />
+                </div>
+
+                <div>
+                    <label class="fw-bold">ISBN</label>
+                    <InputText class="form-control mb-3" @bind-Value="Book.Isbn" />
+                </div>
+
+                <div>
+                    <label class="fw-bold">Price</label>
+                    <InputNumber class="form-control mb-3" @bind-Value="Book.Price" />
+                </div>
+
+                <div>
+                    <label class="fw-bold">Year</label>
+                    <InputNumber class="form-control mb-3" @bind-Value="Book.Year" />
+                </div>
+
+                <div>
+                    <label class="fw-bold">Summary</label>
+                    <InputTextArea class="form-control mb-3" @bind-Value="Book.Summary" />
+                </div>                           
+            </fieldset>
+
+            <div class="d-flex justify-content-around">
+                <a href="/books" class="btn btn-primary col-5">
+                    <span class="oi oi-media-skip-backward me-2"></span> Back To Books
+                </a>
+
+                <a href="/book/update/@Book.Id" class="btn btn-secondary col-5">
+                    <span class="oi oi-pecil me-2"></span> Update Book
+                </a>
+            </div>
+        </EditForm>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    BookReadDto? Book = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await bookService.GetBook(Id);
+        if (response.Success)
+            Book = response.Data;
+    }
+}

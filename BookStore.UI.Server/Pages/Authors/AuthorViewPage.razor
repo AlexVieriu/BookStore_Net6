@@ -1,0 +1,76 @@
+﻿@page "/author/view/{id:int}"
+
+@inject IAuthorService authorService
+@inject NavigationManager navManager
+
+<h3>View Author</h3>
+<br />
+
+@if (Author != null)
+{
+    <div class="card col-6 p-4 mt-4">
+        <EditForm Model="Author">
+            <fieldset disabled="true">
+                <div>
+                    <label class="fw-bold">First Name</label>
+                    <InputText class="form-control mb-3" @bind-Value="Author.FirstName" />
+                </div>
+
+                <div>
+                    <label class="fw-bold">Last Name</label>
+                    <InputText class="form-control mb-3" @bind-Value="Author.LastName" />
+                </div>
+
+                <div>
+                    <label class="fw-bold">Bio</label>
+                    <InputTextArea class="form-control mb-3" @bind-Value="Author.Bio" />
+                </div>
+            </fieldset>
+
+            @if (Author.Books == null || Author.Books.Any() == false)
+            {
+                <div class="alert alert-dismissible alert-secondary">
+                    No Books for this Author
+                </div>
+            }
+            else
+            {
+                foreach (var book in Author.Books)
+                {
+                    <div class="card mb-5" style="width: 12rem;">
+                        <img src="@book.Image" class="card-img-top" alt="@book.Title">
+                        <div class="card-body">
+                            <h5 class="card-title">@book.Title - @book.Price.ToString("C")</h5>
+                            <p class="card-text"></p>
+                            <a href="/book/view/@book.Id" class="btn btn-primary">View book</a>
+                        </div>
+                    </div>
+                }
+            }
+
+        </EditForm>
+        <div class="d-flex justify-content-around">
+            <a href="/author/update/@Author.Id" class="btn btn-primary col-5">
+                <span class="oi oi-pencil me-2"></span> Edit Author
+            </a>
+
+            <a href="/authors" class="btn btn-secondary col-5">
+                <span class="oi oi-media-skip-backward me-2"></span> Back To List
+            </a>
+        </div>
+    </div>
+}
+
+@code {
+    private AuthorReadDto Author = new();
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await authorService.GetAuthor(Id);
+        if (response.Data != null)
+            Author = response.Data;
+    }
+}

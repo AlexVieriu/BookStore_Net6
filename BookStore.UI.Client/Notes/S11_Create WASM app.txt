@@ -1,0 +1,103 @@
+﻿59. Tranferring Blazor code to WASM
+
+Copy:
+-> MappingUI
+-> Pages(Authors, Books, User)
+-> Providers
+-> Services
+-> Sared(NavMenu)
+-> Static
+
+
+-- Program.cs --
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7138") });
+
+builder.Services.AddBlazoredLocalStorage();
+
+builder.Services.AddScoped<ApiAuthentificationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(p => p.GetRequiredService<ApiAuthentificationStateProvider>());
+builder.Services.AddAuthorizationCore();
+
+builder.Services.AddScoped<IClient, Client>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IBookService, BookService>();
+
+builder.Services.AddAutoMapper(typeof(MapUIConfig));
+
+await builder.Build().RunAsync();
+
+
+-- App.razor --
+<CascadingAuthenticationState>
+	....
+	<AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+        <NotAuthorized>
+            @if (context.User?.Identity?.IsAuthenticated == false)
+            {
+                <LoginUI />
+            }
+            else
+            {
+                <div class="alert alert-warning">You are not authorized</div>
+            }
+        </NotAuthorized>
+    </AuthorizeRouteView>
+    ....
+</CascadingAuthenticationState>
+
+
+-- _Import.razor --
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Security.Claims
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using Microsoft.JSInterop
+
+@using AutoMapper
+
+@using BookStore.UI.Client
+@using BookStore.UI.Client.Shared
+@using BookStore.UI.Client.Services.Base
+@using BookStore.UI.Client.Pages.User
+@using BookStore.UI.Client.Services.User
+@using BookStore.UI.Client.Services.Author
+@using BookStore.UI.Client.Services
+@using BookStore.UI.Client.Static
+
+
+-- GlobalUsingUI.cs --
+global using System.Net.Http.Headers;
+global using Blazored.LocalStorage;
+global using BookStore.UI.Client.Services.Base;
+global using BookStore.UI.Client.Static;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Security.Claims;
+global using BookStore.UI.Client.Providers;
+
+global using BookStore.UI.Client;
+global using Microsoft.AspNetCore.Components.Web;
+global using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+
+global using BookStore.UI.Client.MappingUI;
+global using BookStore.UI.Client.Services.Author;
+global using BookStore.UI.Client.Services.Book;
+global using BookStore.UI.Client.Services.User;
+
+global using Microsoft.AspNetCore.Components.Authorization;
+
+
+60. Progressive Web Application
+
+

@@ -1,0 +1,80 @@
+﻿@page "/register"
+
+@inject IClient httpClient
+@inject NavigationManager navManager
+
+<h4>Register User</h4>
+
+@if (!string.IsNullOrWhiteSpace(message))
+{
+    <p class="alert alert-danger">@message</p>
+}
+
+@if (RegisterModel != null)
+{
+    <div class="card p-4 mt-5 col-6">
+        <EditForm Model="RegisterModel" OnValidSubmit="OnRegisterUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div>
+                <label class="fw-bold">UserName</label>
+                <InputText class="form-control mb-3" @bind-Value="RegisterModel.UserName" />
+            </div>
+
+            <div>
+                <label class="fw-bold">First Name</label>
+                <InputText class="form-control mb-3" @bind-Value="RegisterModel.FirstName" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Last Name</label>
+                <InputText class="form-control mb-3" @bind-Value="RegisterModel.LastName" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Email</label>
+                <InputText class="form-control mb-3" @bind-Value="RegisterModel.Email" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Password</label>
+                <InputText class="form-control mb-3" @bind-Value="RegisterModel.Password" type="password" />
+            </div>
+
+            <div>
+                <label class="fw-bold">Role</label>
+                <InputText class="form-control mb-3" @bind-Value="role" />
+            </div>
+
+            <button class="btn btn-primary col-3" type="submit">Register User</button>
+
+        </EditForm>
+    </div>
+}
+
+
+@code {
+    RegisterUser RegisterModel;
+    string message = "";
+    string role = "User";
+
+    protected override void OnInitialized()
+    {
+        RegisterModel = new()
+            {
+                UserName = "alex2",
+                FirstName = "Vieriu",
+                LastName = "Alexandru",
+                Email = "vieriu@bookstore.com",
+                Password = "Calorifer21@!",
+                Role = role
+            };
+    }
+
+    private async Task OnRegisterUser()
+    {
+        await httpClient.RegisterAsync(RegisterModel);
+        navManager.NavigateTo("/");
+    }
+}
