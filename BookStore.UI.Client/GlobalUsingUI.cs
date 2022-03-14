@@ -18,3 +18,4 @@ global using AutoMapper;
 global using BookStore.UI.Client.Services;
 
 global using Microsoft.AspNetCore.Components.Authorization;
+global using BookStore.UI.Client.Models;

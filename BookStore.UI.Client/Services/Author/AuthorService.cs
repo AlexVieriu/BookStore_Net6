@@ -64,6 +64,27 @@ public class AuthorService : BaseHttpService, IAuthorService
         return response;
     }
 
+    public async Task<Response<AuthorReadDtoVirtualizeResponse>> GetWithPG(QueryParameters queryParams)
+    {
+        Response<AuthorReadDtoVirtualizeResponse> response;
+        try
+        {
+            await GetBearerToken();
+            var data = await _client.AuthorsWithPgAsync(queryParams.StartIndex, queryParams.PageSize);
+            response = new Response<AuthorReadDtoVirtualizeResponse>
+            {
+                Data = data,
+                Success = true
+            };
+        }
+        catch (ApiException ex)
+        {
+            response = ConvertApiException<AuthorReadDtoVirtualizeResponse>(ex);
+        }
+
+        return response;
+    }
+
     public async Task<Response<AuthorReadDto>> GetAuthor(int authorId)
     {
         Response<AuthorReadDto> response;

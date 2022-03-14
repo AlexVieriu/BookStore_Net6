@@ -5,7 +5,8 @@
 @inject NavigationManager navManager
 
 <h3>List of Authors</h3>
-<br /><br />
+<br />
+<br />
 
 @if (response?.Success == false)
 {
@@ -19,52 +20,21 @@
             <a class="btn btn-success btn-lg col-2 mb-4" href="/author/create">Create Author</a>
         </AuthorizeView>
 
-
-
-        @*<table class="table table-responsive">
-            <thead class="table-dark">
-                <tr>
-                    <th>Id</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var author in Authors)
-                {
-                    <tr>
-                        <td>@author.Id</td>
-                        <td>@author.FirstName</td>
-                        <td>@author.LastName</td>
-                        <td>
-                            <a class="btn btn-primary me-2" href="/author/view/@author.Id">
-                                <span class="oi oi-eye me-2"></span>View
-                            </a>
-                            <AuthorizeView Roles="Administrator">
-                                <a class="btn btn-warning me-2" href="/author/update/@author.Id">
-                                    <span class="oi oi-pencil me-2"></span>Update
-                                </a>
-                                <button class="btn btn-danger me-2" @onclick="@(() => OnDeleteAuthor(author.Id))">
-                                    <span class="oi oi-trash me-2"></span>Delete
-                                </button>
-                            </AuthorizeView>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>*@
+        <AuthorTable Authors="Authors" OnScroll="LoadAuthors" TotalSize="TotalSize" />
     </div>
 }
 
-
 @code {
     public List<AuthorReadDto> Authors;
-    private Response<List<AuthorReadDto>> response = new() { Success = true };
     public int TotalSize { get; set; }
+    private Response<List<AuthorReadDtoVirtualizeResponse>> response = new() { Success = true };
 
-
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await authorService.GetWithPG(new QueryParameters { StartIndex = 0 });
+        if (response.Success)
+            Authors = response.Data.Items.ToList();
+    }
 
     private async Task LoadAuthors(QueryParameters queryParam)
     {
@@ -72,24 +42,4 @@
         Authors = virtualizeResult.Data.Items.ToList();
         TotalSize = virtualizeResult.Data.TotalSize;
     }
-
-    //protected override async Task OnInitializedAsync()
-    //{
-    //    response = await authorService.GetAuthors();
-    //    if (response.Success)
-    //        Authors = response.Data;
-    //}
-
-    //private async Task OnDeleteAuthor(int id)
-    //{
-    //    var author = Authors.First(q => q.Id == id);
-    //    var confirm = await js.InvokeAsync<bool>("confirm",
-    //        $"Are you sure you want to delete {author.FirstName} {author.LastName}");
-    //    if (confirm)
-    //    {
-    //        response.Success = (await authorService.DeleteAuthor(id)).Success;
-    //        if (response.Success)
-    //            await OnInitializedAsync();
-    //    }
-    //}
 }
