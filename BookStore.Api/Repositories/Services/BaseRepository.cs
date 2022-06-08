@@ -36,7 +36,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class
         where TResult : class
     {
         var totalSize = await _context.Set<T>().CountAsync();
-        var items = await _context.Set<T>().Skip(queryParam.StartIndex)
+        var items = await _context.Set<T>().Skip(queryParam.StartIndex)                    
                                            .Take(totalSize)
                                            .ProjectTo<TResult>(_mapper.ConfigurationProvider) // optional 
                                            .ToListAsync();
