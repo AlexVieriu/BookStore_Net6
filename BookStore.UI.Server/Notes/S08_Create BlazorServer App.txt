@@ -1,4 +1,4 @@
-﻿34. Create/Understand Blazor Project Structure
+﻿4. Create/Understand Blazor Project Structure
 WASM project -> allows you to run a full app only inside the browser, all of the dependencies, 
 				all of the libraries can run inside the browser
 
@@ -10,7 +10,7 @@ javascrit isolation	(nested in the .razor page)	- .net 6
 App.razor: initialized some default components that are needed to launch the app
 
 
-35. Setup HTTP Client Using Nswag Studio
+5. Setup HTTP Client Using Nswag Studio
 
 NSwag:https://github.com/RicoSuter/NSwag
 -> will generate the code needed for the interaction with the API
@@ -29,7 +29,7 @@ ex: you can have multiple API been consumed by a single UI app
 -> you can initialize an http client per API
 
 
-36. Setup User Registration
+6. Setup User Registration
 Pages->Users-> UserRegister.razor
 
 Html:
@@ -53,7 +53,7 @@ JSON  Annotation: [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Js
 Model Annotation: [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)] 
 
 
-37_38. Setup User Login 
+7. Setup User Login 
 
 -- Authentication - 
 

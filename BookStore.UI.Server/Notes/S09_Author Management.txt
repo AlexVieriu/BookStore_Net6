@@ -1,4 +1,4 @@
-﻿41. Setup Index
+﻿1. Setup Index
 
 -- NaMenu.razor --
 -> add a nav link Author 
@@ -19,7 +19,7 @@ Error: Unauthorized(401) when i call the Authors
 -> we resolve this error at the next lesson(this error come because we didn't 
 send the token, that need to pe put in teh header, with the rest of the request)
 
-42. Extend HTTP Client
+2. Extend HTTP Client
 
 -- Services --
 
@@ -106,7 +106,7 @@ public async Task<Response<List<AuthorReadDto>>> GetAuthors()
 @inject IAuthorService authorService
 
 
-43. Setup Create Author Comp
+3. Setup Create Author Comp
 
 -> use "submit" so the <EditForm> knows what button is referring to OnValidSubmit 
 
@@ -129,7 +129,7 @@ private async Task OnCreateAuthor()
 BackToList() : -> go back to the Authors page
 
 
-44. Setup Update Author Comp
+4. Setup Update Author Comp
 
 -- AuthorService.cs --
 
@@ -175,7 +175,7 @@ private async Task OnUpdateAuthor()
 BackToList() : -> go back to the Authors page
 
 
-45. Setup View Author Comp
+5. Setup View Author Comp
 
 UI:
 <div class="card col-6 p-4 mt-4">
@@ -210,7 +210,7 @@ https://getbootstrap.com/docs/5.0/components/card/
 </div>
 
 
-46. Delete Author with JS Interop
+6. Delete Author with JS Interop
 
 -> add delete method to the AuthorService
 
@@ -239,7 +239,7 @@ private async Task OnDeleteAuthor(int id)
     }
 }
 
-47. Add Authorization Restrictions
+7. Add Authorization Restrictions
 
 -- AuthorsPage.cs --
 -> put the update and create button in a  <AuthorizeView Roles="Administrator"> component

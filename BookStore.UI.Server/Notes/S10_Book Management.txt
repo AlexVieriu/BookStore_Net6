@@ -1,4 +1,4 @@
-﻿50. Setup Book Management Service Methods
+﻿1. Setup Book Management Service Methods
 
 -- Services -> Book -> IBookService.cs, BookService.cs --
 Task<Response<BookReadDto>> GetBook(int id);
@@ -14,7 +14,7 @@ CreateMap<BookReadDto,BookUpdateDto>().ReverseMap();
 builder.Services.AddScoped<IBookService, BookService>();
 
 
-51. Setup Books Index Component(With Delete Functionality)
+1. Setup Books Index Component(With Delete Functionality)
 
 -- BooksPage.razor --
 @inject IBookService bookService
@@ -41,7 +41,7 @@ private async Task OnDeleteBook(int id)
 }
 
 
-52. Setup Create Book Component w/ File Update - Part 1 
+2. Setup Create Book Component w/ File Update - Part 1 
 
 @inject IBookService bookService
 @inject IAuthorService authorService
@@ -94,7 +94,7 @@ private async Task OnSelectFile(InputFileChangeEventArgs e)
 }
 
 
-53. Setup Create Book Component w/ File Update - Part 2
+3. Setup Create Book Component w/ File Update - Part 2
 
 -- BookController.cs --
 
@@ -137,7 +137,7 @@ private string CreateFile(string imageBase64String, string originalImage)
 }
 
 
-54. Setup View Book Component
+4. Setup View Book Component
 
 Refactorying API
 
@@ -185,7 +185,7 @@ OnInitializedAsync()
     -> .GetBook(Id);    
 
 
-55. Setup Update Book Component
+5. Setup Update Book Component
 
 -- BookController.cs -> UpdateBook(....)
 {

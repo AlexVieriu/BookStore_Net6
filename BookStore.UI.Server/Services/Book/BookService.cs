@@ -17,7 +17,7 @@ public class BookService : BaseHttpService, IBookService
         try
         {
             await GetBearerToken();
-            await _client.BookPOSTAsync(book);
+            await _client.BookPOSTAsync(book);            
 
             response = new Response<int>()
             {
