@@ -44,7 +44,7 @@
 
             <div>
                 <label class="fw-bold">Role</label>
-                <InputText class="form-control mb-3" @bind-Value="role" />
+                <InputText class="form-control mb-3" @bind-Value="RegisterModel.Role" />
             </div>
 
             <button class="btn btn-primary col-3" type="submit">Register User</button>
@@ -56,8 +56,7 @@
 
 @code {
     RegisterUser RegisterModel;
-    string message = "";
-    string role = "User";
+    string message = "";    
 
     protected override void OnInitialized()
     {
@@ -68,7 +67,7 @@
                 LastName = "Alexandru",
                 Email = "vieriu@bookstore.com",
                 Password = "Calorifer21@!",
-                Role = role
+                Role = "User"
             };
     }
 

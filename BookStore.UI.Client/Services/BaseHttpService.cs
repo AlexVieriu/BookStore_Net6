@@ -36,7 +36,7 @@ public class BaseHttpService
         {
             return new Response<Guid>()
             {
-                Message = "Te request item could not be found",
+                Message = "The request item could not be found",
                 Success = false
             };
         }

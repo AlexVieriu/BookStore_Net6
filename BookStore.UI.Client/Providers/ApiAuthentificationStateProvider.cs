@@ -1,6 +1,4 @@
-﻿
-
-namespace BookStore.UI.Client.Providers;
+﻿namespace BookStore.UI.Client.Providers;
 public class ApiAuthentificationStateProvider : AuthenticationStateProvider
 {
     private readonly ILocalStorageService _localStorage;

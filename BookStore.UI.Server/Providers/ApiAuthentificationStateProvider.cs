@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using BookStore.UI.Server.Static;
 
 namespace BookStore.UI.Server.Providers;
 public class ApiAuthentificationStateProvider : AuthenticationStateProvider

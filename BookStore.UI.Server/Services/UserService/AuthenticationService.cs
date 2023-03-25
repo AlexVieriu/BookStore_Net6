@@ -1,8 +1,4 @@
-﻿using BookStore.UI.Server.Providers;
-using BookStore.UI.Server.Services.Base;
-using BookStore.UI.Server.Static;
-
-namespace BookStore.UI.Server.Services.User;
+﻿namespace BookStore.UI.Server.Services.User;
 public class AuthenticationService : IAuthenticationService
 {
     private readonly IClient _httpClient;
