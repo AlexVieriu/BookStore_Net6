@@ -1,4 +1,4 @@
-﻿59. Tranferring Blazor code to WASM
+﻿-- Tranferring Blazor code to WASM
 
 Copy:
 -> MappingUI
@@ -98,6 +98,6 @@ global using BookStore.UI.Client.Services.User;
 global using Microsoft.AspNetCore.Components.Authorization;
 
 
-60. Progressive Web Application
+
 
 
