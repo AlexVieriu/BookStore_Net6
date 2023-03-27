@@ -27,9 +27,5 @@ A small BookStore Web Application with BlazorServer/BlazorClient consumming an A
 ### Authors Page pagination
 ![image](https://user-images.githubusercontent.com/13439611/172765003-91dbf47c-063d-472f-a23b-1b832e96ca39.png)
 
-
-### Books Page 
-![image](https://user-images.githubusercontent.com/13439611/172765064-2d71f2a7-1055-4d71-bfd5-9189df63f531.png)
-
 ### Update Book Page
 ![image](https://user-images.githubusercontent.com/13439611/172765097-42a5113f-457f-4146-8ae7-a41ac2d9d250.png)
